@@ -6,7 +6,6 @@ var bodyParser = require("body-parser");
 const router = require("./makePayment");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
-
 app.use(cors());
 app.use(bodyParser.json({ limit: "1000kb" }));
 // app.use(express.json());
@@ -14,16 +13,30 @@ app.use(bodyParser.json({ limit: "1000kb" }));
 const PORT = process.env.PORT || 9000;
 
 const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
+  host: process.env.MYSQL_ADDON_HOST,
+  user: process.env.MYSQL_ADDON_USER,
+  password: process.env.MYSQL_ADDON_PASSWORD,
+  database: process.env.MYSQL_ADDON_DB,
+});
+
+app.get("/getAll_category_subcategory", (req, res) => {
+  console.log("executing getAll_category_subcategory");
+  const q =
+    "SELECT `id_category`, `id_subCategory` FROM `category_subcategory` WHERE 1";
+  db.query(q, (err, data) => {
+    if (err) {
+      console.log(err);
+      return res.status(400).json(err);
+    } else {
+      return res.status(200).json(data);
+    }
+  });
 });
 
 app.use("/makePayment", router);
 
 app.post("/addProduct", (req, res) => {
-  // console.log("iiiii");
+  console.log("executing add Product");
   let { title, desc, img, img2, price, isNew, type, category, subCategory } =
     req.body;
   // console.log(isNew);
@@ -66,19 +79,8 @@ app.post("/addProduct", (req, res) => {
   });
 });
 
-app.get("/getAll_category_subcategory", (req, res) => {
-  const q = "Select * from category_subCategory";
-  db.query(q, (err, data) => {
-    if (err) {
-      console.log(err);
-      return res.status(400).json(err);
-    } else {
-      return res.status(200).json(data);
-    }
-  });
-});
-
 app.post("/addCategory", (req, res) => {
+  console.log("executing post");
   const { title, desc, img } = req.body;
   const q = `INSERT INTO \`category\`(\`title\`, \`desc\`, \`img\`) VALUES ("${title}", "${desc}", "${img}")`;
   db.query(q, (err, data) => {
@@ -92,6 +94,7 @@ app.post("/addCategory", (req, res) => {
 });
 
 app.get("/categories", (req, res) => {
+  console.log("retrieving categories");
   const q = `SELECT * from category`;
   db.query(q, (err, data) => {
     if (err) {
@@ -105,6 +108,7 @@ app.get("/categories", (req, res) => {
 });
 
 app.get("/subCategories", (req, res) => {
+  console.log("retrieving subcategories");
   const q = `SELECT * from sub_category`;
   db.query(q, (err, data) => {
     if (err) {
@@ -118,6 +122,7 @@ app.get("/subCategories", (req, res) => {
 });
 
 app.get("/getSubCategory/:id", (req, res) => {
+  console.log("retrieving getSubCategory/:id");
   const id = req.params.id;
   const q = `SELECT * from sub_category where id_subcategory=${id}`;
   db.query(q, (err, data) => {
@@ -130,6 +135,7 @@ app.get("/getSubCategory/:id", (req, res) => {
 });
 
 app.get("/getCategory/:id", (req, res) => {
+  console.log("retrieving /getCategory/:id");
   const id = req.params.id;
   const q = `SELECT * from category where id_category=${id}`;
   db.query(q, (err, data) => {
@@ -142,6 +148,7 @@ app.get("/getCategory/:id", (req, res) => {
 });
 
 app.get("/getProducts/:id", (req, res) => {
+  console.log("retrieving /getProducts/:id");
   const q = `SELECT id_product, title, img, img2, price, isNew from product where type="${req.params.id}"`;
   db.query(q, (err, data) => {
     if (err) {
@@ -154,6 +161,7 @@ app.get("/getProducts/:id", (req, res) => {
 });
 
 app.get("/getProductById/:id", (req, res) => {
+  console.log("retrieving /getProductById/:id");
   const q = `SELECT * from product where id_product=${req.params.id}`;
   db.query(q, (err, data) => {
     if (err) {
@@ -194,6 +202,7 @@ const getSubCatDetails = (q) => {
 };
 
 app.get("/get_category_subcategory/:id", async (req, res) => {
+  console.log("retrieving /get_category_subcategory/:id");
   const q = `SELECT id_subCategory from category_subcategory where id_category=${req.params.id}`;
   let subCatDetails = [];
   try {
@@ -212,6 +221,7 @@ app.get("/get_category_subcategory/:id", async (req, res) => {
 });
 
 app.get("/get_subcategory_category/:id", async (req, res) => {
+  console.log("retrieving /get_subcategory_category/:id");
   const q = `SELECT id_category from category_subcategory where id_subCategory=${req.params.id}`;
   let subCatDetails = [];
   try {
@@ -230,7 +240,8 @@ app.get("/get_subcategory_category/:id", async (req, res) => {
 });
 
 app.post("/addSubCategory", (req, res) => {
-  const { title, category } = req.body;
+  console.log("retrieving /get_subcategory_category/:id");
+  const { title, category, img } = req.body;
   let insertId = "";
   const s = `SELECT id_subCategory from sub_category where title = "${title}"`;
   db.query(s, (err, data) => {
@@ -239,7 +250,7 @@ app.post("/addSubCategory", (req, res) => {
       return res.status(400).json(err);
     } else {
       if (data.length === 0) {
-        const q = `INSERT INTO \`sub_category\`(\`title\`) VALUES ("${title}")`;
+        const q = `INSERT INTO \`sub_category\`(\`title\`, \`img\`) VALUES ("${title}", "${img}")`;
         db.query(q, (err, data) => {
           if (err) {
             console.log(err);
@@ -278,6 +289,7 @@ app.post("/addSubCategory", (req, res) => {
 });
 
 app.get("/getProductsByCategory", (req, res) => {
+  console.log("retrieving /getProductsByCategory");
   const id = req.query.id;
   const maxPrice = req.query.maxPrice;
   const sort = req.query.sort;
@@ -300,6 +312,7 @@ app.get("/getProductsByCategory", (req, res) => {
 });
 
 app.get("/getProductsBySubCategory", (req, res) => {
+  console.log("retrieving /getProductsBySubCategory");
   const id = req.query.id;
   const maxPrice = req.query.maxPrice;
   const sort = req.query.sort;
@@ -322,6 +335,7 @@ app.get("/getProductsBySubCategory", (req, res) => {
 });
 
 app.post("/signup", async (req, res) => {
+  console.log("executing signup");
   const username = req.body.username;
   const email = req.body.email;
   let password = req.body.password;
@@ -345,6 +359,7 @@ app.post("/signup", async (req, res) => {
 });
 
 app.post("/addadmin", async (req, res) => {
+  console.log("executing addadmin");
   const username = req.body.username;
   const email = req.body.email;
   const img = req.body.img;
@@ -368,6 +383,7 @@ app.post("/addadmin", async (req, res) => {
 });
 
 app.post("/login", (req, res) => {
+  console.log("executing login");
   const email = req.body.email;
   let password = req.body.password;
 
@@ -400,24 +416,8 @@ app.post("/login", (req, res) => {
       }
     }
   });
-  //   try {
-  //     const salt = await bcrypt.genSalt(10);
-  //     password = await bcrypt.hash(password, salt);
-  //   } catch (error) {
-  //     return res.status(500).json("Internal Server Error");
-  //   }
-  //   const q = `INSERT INTO \`users\`(\`username\`, \`email\`, \`password\`) VALUES ('${username}','${email}','${password}')`;
-  //   db.query(q, (err, data) => {
-  //     if (err) {
-  //       console.log(err);
-  //       return res.status(400).json(err);
-  //     } else {
-  //       // console.log(data);
-  //       return res.status(200).json(data);
-  //     }
-  //   });
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is listening on port 8800`);
+  console.log(`Server is listening on port ${PORT}`);
 });
