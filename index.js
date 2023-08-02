@@ -12,11 +12,12 @@ app.use(bodyParser.json({ limit: "1000kb" }));
 
 const PORT = process.env.PORT || 9000;
 
-const db = mysql.createConnection({
+const db = mysql.createPool({
   host: process.env.MYSQL_ADDON_HOST,
   user: process.env.MYSQL_ADDON_USER,
   password: process.env.MYSQL_ADDON_PASSWORD,
   database: process.env.MYSQL_ADDON_DB,
+  waitForConnections: true,
 });
 
 app.get("/getAll_category_subcategory", (req, res) => {
