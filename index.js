@@ -11,6 +11,8 @@ app.use(cors());
 app.use(bodyParser.json({ limit: "1000kb" }));
 // app.use(express.json());
 
+const PORT = process.env.PORT || 9000;
+
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -416,6 +418,6 @@ app.post("/login", (req, res) => {
   //   });
 });
 
-app.listen(8800, () => {
+app.listen(PORT, () => {
   console.log(`Server is listening on port 8800`);
 });
